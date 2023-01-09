@@ -1,5 +1,4 @@
-# reg_skewJSD
-Entropy regularization with skewed Jensen-Shannon Divergence
+# Fine-grained Classification of Solder Joints with α-skew Jensen-Shannon Divergence
 
 
 This repository contains PyTorch implementation for the paper titled "Fine-grained Classification of Solder Joints with α-skew Jensen-Shannon Divergence.".
