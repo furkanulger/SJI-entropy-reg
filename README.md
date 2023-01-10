@@ -43,9 +43,12 @@ Type -h to get description of the parameters for the script as follows:
 
 <img width="693" alt="help" src="https://user-images.githubusercontent.com/50952046/211635714-3a9f720f-d63d-4125-ab6d-d70b47fcaf74.PNG">
 
-
-```python
 To train GoogleNet with alpha-skew Jensen-Shannon divergence where a= 0.1, batch size = 64, learning rate= 1e-4, number of epochs= 100:
+```python
 cd SJI_entropy_reg/
 python skewed_JSdivergence.py -t train -m googlenet -a(optional) 0.1  -bs(optional) 64 -lr(optional) 1e-4 -e(optional) 100
 ```    
+To test the trained model with alpha-skew Jensen-Shannon divergence where a= 0.1:
+```python
+python skewed_JSdivergence.py -t test -m googlenet -a 0.1 -p results/skewed_JSD_model_.pth
+```  
