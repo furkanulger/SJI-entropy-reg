@@ -45,7 +45,7 @@ Type -h to get description of the parameters for the script as follows:
 
 
 ```python
-# To train GoogleNet with alpha-skew Jensen-Shannon divergence a= 0.1, batch size = 64, learning rate= 1e-4, number of epochs= 100:
+To train GoogleNet with alpha-skew Jensen-Shannon divergence where a= 0.1, batch size = 64, learning rate= 1e-4, number of epochs= 100:
 cd SJI_entropy_reg/
 python skewed_JSdivergence.py -t train -m googlenet -a(optional) 0.1  -bs(optional) 64 -lr(optional) 1e-4 -e(optional) 100
 ```    
