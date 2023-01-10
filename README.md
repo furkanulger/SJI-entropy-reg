@@ -35,9 +35,9 @@ The dataset used in the paper is private, therefore you need to use your own dat
     │                .    
     └── ...
     
-    ## Usage
+## Usage
     
-    Type -h to get description of the parameters for the script as follows:
-    <img width="393" alt="help" src="https://user-images.githubusercontent.com/50952046/211635714-3a9f720f-d63d-4125-ab6d-d70b47fcaf74.PNG">
+Type -h to get description of the parameters for the script as follows:
+<img width="393" alt="help" src="https://user-images.githubusercontent.com/50952046/211635714-3a9f720f-d63d-4125-ab6d-d70b47fcaf74.PNG">
 
     
