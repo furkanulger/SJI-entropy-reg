@@ -38,4 +38,5 @@ The dataset used in the paper is private, therefore you need to use your own dat
     ## Usage
     
     Type -h to get description of the parameters for the script as follows:
-    https://github.com/furkanulger/SJI_entropy_reg/blob/main/help.PNG
+    <img width="434" alt="CAM" src="[https://github.com/furkanulger/SJI_entropy_reg/blob/main/help.PNG]">
+    
