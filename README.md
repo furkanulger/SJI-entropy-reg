@@ -15,8 +15,8 @@ Solder joint inspection (SJI) is a critical process in the production of printed
 
 ## Installation
 ```
-git clone https://github.com/furkanulger/SJI_entropy_reg.git
-cd SJI_entropy_reg/
+git clone https://github.com/furkanulger/SJI-entropy-reg.git
+cd SJI-entropy-reg/
 pip install -r requirements.txt
 ```
 ## About the Dataset
