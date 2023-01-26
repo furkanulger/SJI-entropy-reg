@@ -173,7 +173,7 @@ class skewed_JSD():
         print('Finished Training')
 
 
-    def test_model(self, load_PATH, test_loader):
+    def test_model(self, load_PATH):
         correct = 0
         total = 0
         net.load_state_dict(torch.load(load_PATH))
@@ -225,4 +225,4 @@ trainloader, validloader, testloader = dataloader()
 if args.train_test == "train":
     skewed_JSD(a=args.skew, bs= args.bs, num_epochs=args.numEpochs, lrn_rate= args.lrnrate).train()
 else:
-    skewed_JSD(a=args.skew, bs= args.bs, num_epochs=args.numEpochs, lrn_rate= args.lrnrate).test_model(args.p, testloader)
+    skewed_JSD(a=args.skew, bs= args.bs, num_epochs=args.numEpochs, lrn_rate= args.lrnrate).test_model(args.p)
