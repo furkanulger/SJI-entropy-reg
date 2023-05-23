@@ -4,21 +4,24 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from data_loader import dataloader
 from torchvision import datasets, models, transforms
 import argparse
+from sklearn.metrics import f1_score, precision_score, recall_score
+
+
 torch.manual_seed(42) # same seed for the same weight initialization.
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 parser = argparse.ArgumentParser(description="Model training arguments")
 parser.add_argument("-t", "--train_test", required=True, help=r"'train' or 'test' the model")
 parser.add_argument("-m", "--model", required=True, help="The model to be trained/tested: type 'googlenet' 'resnet50' 'resnet18' 'vgg16'")
-parser.add_argument("-a", "--skew", required=False, help="Skewness parameter (alpha) value [0,1]", default=0.5)
-parser.add_argument("-p", "--path", required=False, help="Path for the model to be tested")
-parser.add_argument("-bs", "--batchsize", help="Batch size for the model", default=8)
+parser.add_argument("-a", "--skew", help="Skewness parameter (alpha) value [0,1]", default=0.5)
+parser.add_argument("-p", "--path", help="Path for the model to be tested")
+parser.add_argument("-c", "--num_classes", help="Number of classes for the model", default=2)
+parser.add_argument("-bs", "--batchsize",help="Batch size for the model", default=8)
 parser.add_argument("-lr", "--lrnrate", help="Learning rate for the model", default=1e-4)
 parser.add_argument("-e", "--numEpochs", help="Number of epochs for the model", default=150)
-args = parser.parse_args()
+args = parser.parse_args() 
 print(args)
 
 save_PATH = './results/skewed_JSD_model_'
@@ -32,40 +35,37 @@ if args.model == "googlenet":
     net = models.googlenet(pretrained=False).to(device)
     net.aux_logits = False
     num_ftrs = net.fc.in_features
-    net.fc = nn.Linear(num_ftrs, 2).to(device) #for 2 classes
+    net.fc = nn.Linear(num_ftrs, args.num_classes).to(device) #for 2 classes
 elif args.model == "resnet50":
     net = models.resnet50(pretrained=False).to(device)  #
     num_ftrs = net.fc.in_features
-    net.fc = nn.Linear(num_ftrs, 2).to(device)
+    net.fc = nn.Linear(num_ftrs, args.num_classes).to(device)
 elif args.model == "resnet18":
     net = models.resnet18(pretrained=False).to(device)  #
     num_ftrs = net.fc.in_features
-    net.fc = nn.Linear(num_ftrs, 2).to(device)
+    net.fc = nn.Linear(num_ftrs, args.num_classes).to(device)
 elif args.model == "vgg16":
     net = models.vgg16(pretrained=False).to(device)
     num_ftrs = net.classifier[6].in_features
-    net.classifier[6] = nn.Linear(num_ftrs, 2).to(device)
+    net.classifier[6] = nn.Linear(num_ftrs, args.num_classes).to(device)
 
 
-train_loader = torch.utils.data.DataLoader(
+trainloader = torch.utils.data.DataLoader(
     datasets.ImageFolder(r'dataset/train/', transforms.Compose([
         transforms.Resize((84, 84)),  # width, height
-        transforms.ToTensor(),
-        transforms.Normalize(mean=(0.618, 0.6373, 0.633), std=(0.2538, 0.2394, 0.2427))
+        transforms.ToTensor()
     ])), batch_size=args.batchsize, num_workers=0, shuffle=False)
 
-valid_loader = torch.utils.data.DataLoader(
+validloader = torch.utils.data.DataLoader(
     datasets.ImageFolder(r'dataset/valid/', transforms.Compose([
         transforms.Resize((84, 84)),  # width, height
-        transforms.ToTensor(),
-        transforms.Normalize(mean=(0.618, 0.6373, 0.633), std=(0.2538, 0.2394, 0.2427))
+        transforms.ToTensor()
     ])), batch_size=args.batchsize, num_workers=0, shuffle=False)
 
-test_loader = torch.utils.data.DataLoader(
+testloader = torch.utils.data.DataLoader(
     datasets.ImageFolder(r'dataset/test/', transforms.Compose([
         transforms.Resize((84, 84)),  # width, height
-        transforms.ToTensor(),
-        transforms.Normalize(mean=(0.618, 0.6373, 0.633), std=(0.2538, 0.2394, 0.2427))
+        transforms.ToTensor()
     ])), batch_size=1, num_workers=0, shuffle=False)
 
 
@@ -86,8 +86,8 @@ class KLDiv(nn.Module):
 
     # Calculation of KL divergence between probability distributions of discrete random variables. Dkl(P || Q) P: data dist., Q: approx. dist.
     def forward(self, x, labels):
-        b = F.one_hot(labels, 2) * (F.log_softmax(x, dim=1)
-                                              - torch.log(F.one_hot(labels, 2) + self.epsilon))
+        b = F.one_hot(labels, args.num_classes) * (F.log_softmax(x, dim=1)
+                                              - torch.log(F.one_hot(labels, args.num_classes) + self.epsilon))
         b = -torch.mean(b.sum(dim=1))
         return b
 
@@ -95,7 +95,6 @@ class KLDiv(nn.Module):
 
 class skewed_JSD():
     def __init__(self, a, bs, num_epochs, lrn_rate):
-        self.__init__()
         self.a = a
         self.num_epochs = num_epochs
         self.lrn_rate = lrn_rate
@@ -132,7 +131,7 @@ class skewed_JSD():
                 loss = ce_loss + self.beta * a_JSdiv
 
                 loss.backward()
-                optimizer.step()  # gradient descent. w' = w - n. grad(loss)/grad(w) loss u azaltacak yönde adım.
+                optimizer.step()  # gradient descent. w' = w - n. grad(loss)/grad(w)
                 total_JSdiv += a_JSdiv.item() * inputs.size(0)
                 total_cross_ent += ce_loss.item() * inputs.size(0)
                 total_train_loss += loss.item() * inputs.size(0) # loss over the mini-batch.
@@ -172,23 +171,20 @@ class skewed_JSD():
         torch.save(net.state_dict(), save_PATH + ".pth")
         print('Finished Training')
 
-
     def test_model(self, load_PATH):
         correct = 0
         total = 0
+        predicted_lbls=[]
+        groundtruth_labels=[]
         net.load_state_dict(torch.load(load_PATH))
         net.eval()
 
         entropy= HLoss()
-        tp = 0
-        fp = 0
-        tn = 0
-        fn = 0
         total_H = 0
         total_JSdiv = 0
         # 0: abnormal, 1:normal
         with torch.no_grad():
-            for data in test_loader:
+            for data in testloader:
                 images, labels = data
                 outputs = net(images.to(device))
 
@@ -203,26 +199,25 @@ class skewed_JSD():
                 total_H += H_loss
                 total_JSdiv += a_JSdiv
                 # class 0: defective class 1: intact.
-                if predicted == 0 and labels.cuda() == predicted: tp += 1
-                if predicted == 0 and labels.cuda() != predicted: fp += 1
-                if predicted == 1 and labels.cuda() == predicted: tn += 1
-                if predicted == 1 and labels.cuda() != predicted: fn += 1
+                predicted_lbls.append(predicted.cpu().detach().numpy())
+                groundtruth_labels.append(labels.cpu().detach().numpy())
 
-        precision = tp / (tp + fp)
-        recall = tp / (tp + fn)
-        f1_score = 2 * (precision * recall) / (precision + recall)  # f1 score
+
+        recall= recall_score(y_true=groundtruth_labels, y_pred=predicted_lbls, average='weighted')
+        precision= precision_score(y_true=groundtruth_labels, y_pred=predicted_lbls, average='weighted')
+        F1_score = f1_score(groundtruth_labels, predicted_lbls)
+
 
         print("Accuracy of the network on the test images: {0:.3f} %".format(100 * (correct / total)))
         print("precision: {0:.5f}, recall= {1:.5f}, f1 score= {2:.5f}.".format(
-            precision, recall, f1_score))
+            precision, recall, F1_score))
         print("Average entropy of the model: {0:.5f}.".format(
-            total_H.detach().cpu().numpy() / test_loader.__len__()))
+            total_H.detach().cpu().numpy() / testloader.__len__()))
         print("Average skew JSD of the model on the test set: {0:.5f}.".format(
-            total_JSdiv.detach().cpu().numpy() / test_loader.__len__()))
+            total_JSdiv.detach().cpu().numpy() / testloader.__len__()))
 
 
-trainloader, validloader, testloader = dataloader()
 if args.train_test == "train":
-    skewed_JSD(a=args.skew, bs= args.bs, num_epochs=args.numEpochs, lrn_rate= args.lrnrate).train()
+    skewed_JSD(a=float(args.skew), bs= args.batchsize, num_epochs=args.numEpochs, lrn_rate= args.lrnrate).train()
 else:
-    skewed_JSD(a=args.skew, bs= args.bs, num_epochs=args.numEpochs, lrn_rate= args.lrnrate).test_model(args.p)
+    skewed_JSD(a=float(args.skew), bs= args.batchsize, num_epochs=args.numEpochs, lrn_rate= args.lrnrate).test_model(args.path)
