@@ -46,7 +46,8 @@ Type -h to get description of the parameters for the script as follows:
 To train GoogleNet with alpha-skew Jensen-Shannon divergence where a= 0.1, batch size = 64, learning rate= 1e-4, number of epochs= 100:
 ```python
 cd SJI_entropy_reg/
-python skewed_JSdivergence.py -t train -m googlenet -a(optional) 0.1  -bs(optional) 64 -lr(optional) 1e-4 -e(optional) 100
+python skewed_JSdivergence.py -t train -m <model> -c <number_of_classes>(default:2) -a <skewness_value>(default:0.5) -lr <learning rate>(default:1e-4) -e <num_of_epochs>(default:150)
+python skewed_JSdivergence.py -t train -m googlenet -a 0.1 -bs 64 -lr 1e-4 -e 100
 ```    
 To test the trained model with alpha-skew Jensen-Shannon divergence where a= 0.1:
 ```python
