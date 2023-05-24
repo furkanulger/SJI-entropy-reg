@@ -47,8 +47,11 @@ To train GoogleNet with alpha-skew Jensen-Shannon divergence where a= 0.1, batch
 ```python
 cd SJI_entropy_reg/
 python skewed_JSdivergence.py -t train -m <model> -c <number_of_classes>(default:2) -a <skewness_value>(default:0.5) -lr <learning rate>(default:1e-4) -e <num_of_epochs>(default:150)
-python skewed_JSdivergence.py -t train -m googlenet -a 0.1 -bs 64 -lr 1e-4 -e 100
 ```    
+Example:
+```python
+python skewed_JSdivergence.py -t train -m googlenet -a 0.1 -bs 64 -lr 1e-4 -e 100
+```  
 To test the trained model with alpha-skew Jensen-Shannon divergence where a= 0.1:
 ```python
 python skewed_JSdivergence.py -t test -m googlenet -a 0.1 -p results/skewed_JSD_model_.pth
